@@ -3,6 +3,7 @@ np.random.seed(7)
 import scipy.linalg as sl
 import matplotlib.pyplot as plt
 plt.style.use('seaborn-colorblind')
+from scipy.integrate import solve_ivp
 
 
 #===============================================================================
@@ -255,7 +256,8 @@ def impulse_function(dim=4, dt=0.1, dur=10, method='sec'):
 rate_const = np.array([1, 5, 0, 2, 0, 1, 1, 2, 0, 0.5])
 
 # initial conditions
-X0 = np.ones(4)
+convergence_factor = np.random.rand(4)*1e-2
+X0 = np.ones(4) + convergence_factor
 
 # construct 'A'
 A = build_matrix(vals=rate_const, mat='A')
