@@ -3,7 +3,6 @@ np.random.seed(7)
 import scipy.linalg as sl
 import matplotlib.pyplot as plt
 plt.style.use('seaborn-colorblind')
-from scipy.integrate import solve_ivp
 
 
 #===============================================================================
