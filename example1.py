@@ -34,7 +34,10 @@ def get_XofT(A, F, X0, time):
         X(t) for the differential equation
     """
     A_evals, A_evecs = np.linalg.eig(A)
-    A_inv = np.linalg.inv(A)
+    try:
+        A_inv = np.linalg.inv(A)
+    except:
+        A_inv = np.linalg.pinv(A)
 
     T = np.array(A_evecs)
     T_inv = np.linalg.inv(T)
@@ -44,42 +47,6 @@ def get_XofT(A, F, X0, time):
         af = A_inv.dot(F[:, ix])
         XofT[:, ix] = -af + np.dot(T.dot(np.dot(np.diag(np.exp(A_evals*t)),
                                                 T_inv)), X0 + af)
-
-    return XofT
-
-
-def get_XofT_v2(A, F, X0, time):
-    """
-    Solve:
-        dX(t)/dt = A X(t) - F(t)
-    for X(t) given the initial conditions X(0).
-
-    This is similar to get_XofT() above but using matrix
-    exponentiation. This is a bit cleaner, but ~25x slower.
-
-    Parameters
-    ----------
-    A : `numpy:ndarray`
-        Matrix of rate constants. Shape (N x N)
-    F : `numpy ndarray`
-        Forcing function. Shape (I x T) where I is the
-        number of inputs and T is the number of time steps
-    X0 : `numpy.ndarray`
-        Initial conditions. Shape (I,) where I is the
-        number of inputs
-    time : `numpy.ndarray`
-        Times over which to evaluate the solution
-
-    Returns
-    -------
-    XofT : `numpy.ndarray`
-        X(t) for the differential equation
-    """
-    A_inv = np.linalg.inv(A)
-    XofT = np.zeros((X0.size, time.size))
-    for ix, t in enumerate(time):
-        af = A_inv.dot(F[:, ix])
-        XofT[:, ix] = -af + np.dot(sl.expm(A*t), X0 + af)
     return XofT
 
 
@@ -118,6 +85,7 @@ def build_matrix(vals=None, alpha=None, mat='D'):
                         [0, k7, 0, -(k8+k9)]])
     return mat
 
+
 def get_KofT(XofT, F, alphas, dt):
     """
     Solve K(t) = (D^T D)^{-1} D^T [dX/dt - F]
@@ -147,6 +115,7 @@ def get_KofT(XofT, F, alphas, dt):
         K[:, ix] = np.dot(D_pinv, (dXdt-F)[:, ix])
 
     return K
+
 
 def determine_K(K, alpha):
     """
@@ -249,6 +218,7 @@ def impulse_function(dim=4, dt=0.1, dur=10, method='sec'):
         F[0, 0] = 1
     return F
 
+
 #===============================================================================
 #                              Paper Example 1
 #===============================================================================
@@ -292,7 +262,7 @@ ax.set_ylabel('Concentration', fontsize=20)
 plt.legend(fontsize=18)
 plt.title('Linear Case, $\mathbf{F}(t) = (1,0,0,0)$', fontsize=25)
 plt.grid(True, which='both', ls='--', zorder=0)
-plt.savefig('plots/test_XofT_paper_example1.png')
+plt.savefig('plots/XofT_paper_example1.png')
 plt.close()
 
 # plot first 9 of K(t) = (k_0(t),... k_9(t))^T.
@@ -308,5 +278,5 @@ for ii in range(3):
         ax[ii][jj].grid(True, which='both', ls='--', zorder=0)
         ax[ii][jj].legend()
         count+=1
-plt.savefig('plots/test_KofT_paper_example1.png')
+plt.savefig('plots/KofT_paper_example1.png')
 plt.close()
