@@ -173,7 +173,7 @@ def determine_alpha_from_k(rate_const, X0, epsilon=1e-6):
     return alphas
 
 
-def impulse_function(dim=4, dt=0.1, dur=10, method='sec'):
+def impulse_function(dim=4, dt=0.1, dur=10, forcing=[1,1,1,1,1,1]):
     """
     Construct the forcing function F(t) for all times
 
@@ -185,27 +185,31 @@ def impulse_function(dim=4, dt=0.1, dur=10, method='sec'):
         Time resolution
     dur : `float`
         Duration in seconds
-    method : `str`
-        Impulse pattern.
-            'sec',  - the impulses will be applied once every second.
-            'comb'  - the impulse is applied every other time-step.
-            'const' - the impulse is applied at every time step.
-            'delta' - the impulse is applied once at the beginning
+    forcing : `list` or `numpy.ndarray`
+        Impulse pattern. Each entry in the 'amplitude' to
+        be applied for the next second. For example, a
+        6s intermittent pump would be called with
+        >>> F, t = impulse_function(dur=6, forcing=[0,1,0,1,0,1])
 
     Returns
     -------
     F : `numpy.ndarray`
         F(t) forcing function
+    time : `numpy.ndarray`
+        time array
     """
     F = np.zeros((dim, int(dur/dt)))
-    if method=='sec':
-        inject = np.arange(0, int(dur/dt), int(1/dt))
-        F[0, inject] = 1
-    elif method=='comb':
-        inject = np.arange(0, int(dur/dt), 2)
-        F[0, inject] = 1
-    elif method=='const':
-        F[0, :] = 1
-    elif method=='delta':
-        F[0, 0] = 1
-    return F
+    time = np.zeros(int(dur/dt))
+    time[:int(1/dt)] = np.arange(0, 1, dt)
+    idx = 1
+    for ix, inject in enumerate(order):
+        st, et = int(ix/dt), int((ix+1)/dt)
+        F[0, st:et] = inject
+        if ix>0:
+            if (order[ix]-order[ix-1])==0:
+                time[st:et] = np.arange(idx, idx+1, dt)
+                idx += 1
+            else:
+                time[st:et] = np.arange(0, 1, dt)
+                idx = 1
+    return F, time
